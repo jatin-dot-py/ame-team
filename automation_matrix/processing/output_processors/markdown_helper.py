@@ -6,8 +6,10 @@ import aiofiles
 import json
 from mdit_py_plugins.front_matter import front_matter_plugin
 from mdit_py_plugins.footnote import footnote_plugin
-from common import vcprint
-from sample_data.data_access import get_sample_data
+from common import vcprint, pretty_print
+from common import get_sample_data
+from common.sample_data.automation_matrix.sample_openai_responses import get_sample_fine_tuning_response
+
 verbose = False
 
 
@@ -238,133 +240,6 @@ async def get_markdown_asterisk_structure(markdown_text):
     return asterisk_structure_results
 
 
-class MarkdownProcessor:
-    def __init__(self):
-        self.md = MarkdownIt("commonmark")
-
-    def init_markdown_parser(self):
-        return self.md
-
-    def get_text_content(self, node):
-        if node.type == 'text':
-            return node.content
-        elif node.children:
-            return ' '.join(self.get_text_content(child) for child in node.children)
-        return ''
-
-    def parse_markdown(self, text):
-        if not text:
-            print("ERROR: parse_markdown received empty text.")
-            return {}
-        md = self.init_markdown_parser()
-        tokens = md.parse(text)
-        root_node = SyntaxTreeNode(tokens)  # Ensure SyntaxTreeNode is defined or imported
-        return self.build_simple_structure(root_node.children)
-
-    def build_simple_structure(self, nodes, content_dict=None, current_key='root'):
-        if content_dict is None:
-            content_dict = {
-                current_key: []
-            }
-
-        for node in nodes:
-            if node.type.startswith('heading'):
-                current_key = self.get_text_content(node).strip()
-                content_dict[current_key] = []
-            elif node.type in ['paragraph', 'inline', 'text']:
-                text = self.get_text_content(node).strip()
-                if text:
-                    content_dict[current_key].append(text)
-            elif node.type in ['bullet_list', 'ordered_list']:
-                for child in node.children:
-                    if child.type == 'list_item':
-                        list_item_text = self.get_text_content(child).strip()
-                        if list_item_text:
-                            content_dict[current_key].append(list_item_text)
-
-        # pretty_print(content_dict)
-        return content_dict
-
-    def parse_markdown_nested(self, text):
-        if not text:
-            print("ERROR: parse_markdown received empty text.")
-            return {}
-        md = self.init_markdown_parser()
-        tokens = md.parse(text)
-        root_node = SyntaxTreeNode(tokens)
-        return self.build_nested_structure(root_node.children)
-
-    def build_nested_structure(self, nodes, content_dict=None, current_key='root'):
-        if content_dict is None:
-            content_dict = {
-                current_key: {}
-            }
-
-        for node in nodes:
-            if node.type.startswith('heading'):
-                current_key = self.get_text_content(node).strip()
-                content_dict[current_key] = {}
-            elif node.type in ['paragraph', 'inline', 'text']:
-                text = self.get_text_content(node).strip()
-                if text:
-                    if 'content' not in content_dict[current_key]:
-                        content_dict[current_key]['content'] = []
-                    content_dict[current_key]['content'].append(text)
-            elif node.type in ['bullet_list', 'ordered_list']:
-                content_dict[current_key]['sections'] = []
-                for child in node.children:
-                    if child.type == 'list_item':
-                        list_item_text = self.get_text_content(child).strip()
-                        if list_item_text:
-                            content_dict[current_key]['sections'].append(list_item_text)
-
-        # Assuming pretty_print is a method you use for debugging or displaying the structure
-        # pretty_print(content_dict)
-        return content_dict
-
-    async def process_markdown(self, text):
-        loop = asyncio.get_running_loop()
-        try:
-            result_dict = await loop.run_in_executor(None, self.parse_markdown, text)
-            if not result_dict:
-                print("ERROR: parse_markdown returned an empty dictionary.")
-                return {
-                    "error": True,
-                    "message": "Markdown parsing resulted in an empty dictionary."
-                }
-            return {
-                'processed_value': result_dict
-            }
-
-        except Exception as e:
-            print(f"ERROR during markdown parsing: {str(e)}")
-            return {
-                "error": True,
-                "message": f"Markdown parsing error: {str(e)}"
-            }
-
-    async def process_markdown_nested(self, text):
-        loop = asyncio.get_running_loop()
-        try:
-            result_dict = await loop.run_in_executor(None, self.parse_markdown_nested, text)
-            if not result_dict:
-                print("ERROR: parse_markdown returned an empty dictionary.")
-                return {
-                    "error": True,
-                    "message": "Markdown parsing resulted in an empty dictionary."
-                }
-            return {
-                'processed_value': result_dict
-            }
-
-        except Exception as e:
-            print(f"ERROR during markdown parsing: {str(e)}")
-            return {
-                "error": True,
-                "message": f"Markdown parsing error: {str(e)}"
-            }
-
-
 async def save_object_as_text(filepath, obj):
     """Serializes an object to a text file in JSON format."""
     async with aiofiles.open(filepath, 'w', encoding='utf-8') as file:
@@ -491,30 +366,47 @@ def access_data_by_reference(extraction_map, data_structure):
 
 
 def handle_OpenAIWrapperResponse(result):
-    core_variable_name = result.get('variable_name', '')
-    processed_values = result.get('processed_values', {})
+    core_variable_name = result.get('variable_name', '') or 'no_variable_name'
+    processed_values = result.get('processed_values', {}) or {}
     p_index = 0
+    brokers = []
+
     print(f"Processing {core_variable_name}...")
 
-    if result.get('processing'):
+    # Ensure the main 'result' dictionary will store all extracted values
+    if result.get('processed_values'):
         print("Processing is still in progress.")
         for processor, processor_data in processed_values.items():
-            p_index += 1
-            e_index = 0
+            p_index += 1  # This is for the processors
+            e_index = 0  # This is for the individual extractors (eg. extracting multiple sections that have been processed)
             method_name = f"handle_{processor}"
-            processor_value = processor_data.get('value', {})
-            if 'extraction' in processor_data:
-                for extraction_map in processor_data['extraction']:  # Adjusted to iterate over a list
+            processor_value = processor_data.get('value', {}) or {}
+            processor_nested_structure = processor_value.get('nested_structure', {}) or {}
+            processor_plain_text = processor_value.get('plain_text', {}) or {}
+            brokers.append({f"{core_variable_name}_NESTED_DICT_{p_index}": processor_nested_structure})
+            brokers.append({f"{core_variable_name}_TEXT_DICT_{p_index}": processor_plain_text})
+
+            if 'extraction' in processor_data:  # Triggers extraction, if extraction is listed as a method
+                for extraction_map in processor_data['extraction']:
                     e_index += 1
-                    variable_name = f"{p_index}_{e_index}_{core_variable_name}"
-                    print(f"Processing {variable_name}")
+
+                    if 'broker' in extraction_map:
+                        broker_name = extraction_map['broker']
+                    else:
+                        broker_name = f"{p_index}_{e_index}_{core_variable_name}"
+
+                    print(f"Processing broker name: {broker_name}")
 
                     try:
-                        extraction_result = access_data_by_reference(extraction_map, processor_value)  # Changed variable name from 'result' to 'extraction_result' to avoid overshadowing
-                        return extraction_result
+                        # Extract data by reference and store in the provided result dictionary
+                        extraction_result = access_data_by_reference(extraction_map, processor_value)
+                        new_entry = {broker_name: extraction_result}
+                        brokers.append(new_entry)
                     except Exception as ex:
-                        # Log the error and continue with the next extraction_map
-                        print(f"Error processing {variable_name} with {method_name}: {ex}")
+                        print(f"Error processing {broker_name} with {method_name}: {ex}")
+
+    result['brokers'] = brokers
+    return result
 
 
 response_data = {
@@ -591,27 +483,34 @@ response_data = {
                 {
                     "key_identifier": "nested_structure",
                     "key_index": 1,
-                    "output_type": "text"
+                    "output_type": "text",
+                    "broker": "BLOG_IDEA_1"
                 },
                 {
                     "key_identifier": "nested_structure",
                     "key_index": 2,
-                    "output_type": "text"
+                    "output_type": "text",
+                    "broker": "BLOG_IDEA_2"
+
                 },
                 {
                     "key_identifier": "nested_structure",
                     "key_index": 3,
-                    "output_type": "text"
+                    "output_type": "text",
+                    "broker": "BLOG_IDEA_3"
                 },
-                {
-                    "key_identifier": "nested_structure",
-                    "key_index": 4,
-                    "output_type": "text"
-                },
+                #  I have commented out Blog Idea 4 for demonstration purposes as though the request was to get blogs 1, 2, 3, and 5, but NOT 4
+                #{
+                #    "key_identifier": "nested_structure",
+                #    "key_index": 4,
+                #    "output_type": "text",
+                #    "broker": "BLOG_IDEA_4"
+                #},
                 {
                     "key_identifier": "nested_structure",
                     "key_index": 5,
-                    "output_type": "text"
+                    "output_type": "text",
+                    "broker": "BLOG_IDEA_5"
                 }
             ]
         }
@@ -648,12 +547,19 @@ async def main(data):
 
 
 if __name__ == "__main__":
+    # sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_1', sub_app='sample_openai_responses')
+    # sample_markdown_processor_output = get_sample_data(app_name='automation_matrix', data_name='sample_markdown_processor_output', sub_app='sample_processing_data')
+    # pretty_print(sample_markdown_processor_output)
 
-    sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_text', sub_app=None)
+    extraction_result = handle_OpenAIWrapperResponse(response_data)
+    pretty_print(extraction_result)
+
     # asyncio.run(main_async(filepath=filepath))
 
     # asyncio.run(get_structure_from_file(filepath=filepath, count=2))
 
     # asyncio.run(main_async())
 
-    asyncio.run(main(sample_data))
+    # Testing fine tuning data
+    # sample_data = get_sample_fine_tuning_response()
+    # asyncio.run(main(sample_data))

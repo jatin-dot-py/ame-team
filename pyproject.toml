@@ -5,6 +5,8 @@ description = ""
 authors = ["armanisadeghi <132974515+armanisadeghi@users.noreply.github.com>"]
 readme = "README.md"
 
+packages = [{include = "ame-team"}]
+
 [tool.poetry.dependencies]
 python = "^3.12"
 python-dotenv = "^1.0.1"

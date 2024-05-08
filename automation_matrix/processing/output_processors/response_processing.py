@@ -6,9 +6,7 @@ from typing import Dict
 from collections import defaultdict
 from typing import List, Union
 import asyncio
-from common import vcprint, pretty_print
-from sample_data.data_access import get_sample_data
-from openai_api.chat_completions.markdown_helper import MarkdownProcessorOne
+from common import vcprint, pretty_print, get_sample_data
 from automation_matrix.processing.output_processors.markdown_helper import MarkdownProcessorOne
 
 verbose = False
@@ -679,7 +677,7 @@ async def access_data_by_reference(reference, data_structure):
     if not index and index != 0:
         nested_dict = data_structure.get(nested_key, {})
         if output_format == 'text':
-            result = '\n\n'.join(f"{key}:\n{'\n'.join(value)}" for key, value in nested_dict.items())
+            result = '\n\n'.join(f'{key}:\n{'\n'.join(value)}' for key, value in nested_dict.items())
         else:
             result = nested_dict
     else:
@@ -718,6 +716,7 @@ async def handle_OpenAIWrapperResponse(result):
             processor_value = processor_data.get('value', {})
             if 'extraction' in processor_data:
                 for extraction_map in processor_data['extraction']:  # Adjusted to iterate over a list
+                    print(f"-------------Processing {core_variable_name} with {method_name}...")
                     e_index += 1
                     variable_name = f"{p_index}_{e_index}_{core_variable_name}"
                     print(f"Processing {variable_name}")
@@ -766,11 +765,19 @@ async def sample_processor_structure(sample_content):
 
 
 async def main():
-    sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_7', sub_app='sample_openai_responses')
+    sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_6', sub_app='sample_openai_responses')
     print(f"Sample Data:\n{sample_data}\n")
     result = await local_post_processing(sample_data)
-    await handle_OpenAIWrapperResponse(result)
+    #await handle_OpenAIWrapperResponse(result)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+
+
+
+
+

@@ -28,6 +28,7 @@ class ProcessAiOutputs:
             "[": "link",
             "![": "image",
         }
+
         self.section_checks = {
             'code_block': self.is_code_block,
             'table': self.is_table,
