@@ -5,7 +5,7 @@ import tempfile
 import time
 from common import pretty_print
 from sample_data import get_sample_data
-
+from ame.settings.base import BASE_DIR, TEMP_DIR
 
 class ProcessAiOutputs:
     def __init__(self):
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     asyncio.run(main(sample_data))
 
     # VERY GOOD FOR MARKDOWN TO DOCX CONVERSION
+    output_docx_file_path = os.path.join(BASE_DIR, "temp", "app_outputs", "output.docx")
 
-    output_docx_file_path = r"D:\OneDrive\dev\PycharmProjects\aidream\temp\app_outputs\output.docx"
 
     convert_markdown_content_to_docx(sample_data, output_docx_file_path=output_docx_file_path)
