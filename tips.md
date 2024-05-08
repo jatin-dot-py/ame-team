@@ -22,6 +22,11 @@
 ## Error handling
 - Not added to this project yet
 
+## 'dev' Directory
+- This is a directory that is meant to be used for development purposes. It is not meant to be included in the final project.
+- I often leave unfinished code, old versions of code, and samples that I don't want in the main project in this directory.
+- 
+
 ## Temp Directory
 - I was having difficulty getting git to include the directories, but create this structure for now:
 - /temp/

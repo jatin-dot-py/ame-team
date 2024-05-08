@@ -136,13 +136,6 @@ _dev/
 junk/
 _junk/
 
-# Ignore all files under 'temp' and its subdirectories
-temp/**/*
-
-# But do not ignore the 'temp' directory and any subdirectories in it
-!temp/
-!temp/**/
-
 
 # Spyder project settings
 .spyderproject
