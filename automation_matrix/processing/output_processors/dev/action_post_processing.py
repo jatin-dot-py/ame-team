@@ -1,7 +1,7 @@
 import re
 import asyncio
 
-from common.utils.my_utils import pretty_print_data
+from common import pretty_print
 
 # This is a different implementation that uses re, instead of markdown-it. Not sure which is better. For now, they kind of get similar results.
 # Keep this because it might be more flexible, but not sure.
@@ -218,7 +218,7 @@ async def main():
 
     # Run the async function and print the result
     result = await process_description(description_content)
-    pretty_print_data(result)
+    pretty_print(result)
 
 
 if __name__ == "__main__":

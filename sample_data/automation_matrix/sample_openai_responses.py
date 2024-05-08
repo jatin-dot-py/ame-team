@@ -354,6 +354,76 @@ sample_7 = """
 - This is a dash.
 """
 
+gpt3_response_random_elements = """Certainly! Here's a comprehensive response with all the requested elements, along with additional examples:
+
+---
+
+### Sample Response
+
+Hey there! Let's delve into a diverse range of elements:
+
+#### Markdown Content
+
+You can use **markdown** for formatting text. Here's an [example link](https://www.example.com).
+
+#### Table
+
+| Fruit   | Quantity |
+|---------|----------|
+| Apple   | 3        |
+| Banana  | 5        |
+| Orange  | 2        |
+
+#### JavaScript Function
+
+```javascript
+function greet(name) {
+    return 'Hello, ' + name + '!';
+}
+console.log(greet('World'));
+```
+
+#### URLs
+
+- [Markdown Guide](https://www.markdownguide.org/cheat-sheet/)
+- [GitHub Repository](https://github.com/)
+
+#### File Directories
+
+- For Windows: `C:/Users/Username/Documents/`
+- For macOS/Linux: `/Users/username/Documents/`
+
+#### Bash Command
+
+For Linux:
+
+```bash
+ls -l
+```
+
+#### Additional Examples
+
+- **Emphasis**: You can _italicize_, **bold**, or even ***combine both***.
+- **Lists**:
+  1. Ordered list item 1
+  2. Ordered list item 2
+  - Unordered list item A
+  - Unordered list item B
+- **Images**:
+  ![Sample Image](https://via.placeholder.com/150)
+- **Blockquotes**:
+  > "The only way to do great work is to love what you do." - Steve Jobs
+- **Code Blocks**:
+  ```python
+  def hello():
+      print("Hello, world!")
+  hello()
+  ```
+
+Feel free to explore further or ask if you need any clarification!
+"""
+
+
 
 def get_sample_fine_tuning_response():
     data = {

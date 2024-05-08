@@ -288,7 +288,7 @@ def process_ai_input_for_phrases(input_string):
 
 
 if __name__ == "__main__":
-    from common.utils.my_utils import pretty_print_data
+    from common import pretty_print
     #impairment_number = "15.01.02.02"
     #fec_rank, impairment_name = get_impairment_data(impairment_number)
 
@@ -298,4 +298,4 @@ if __name__ == "__main__":
     possible_impairments = process_ai_input_for_phrases('["shoulder range of motion"]')  # , "Right Shoulder", "Left Shoulder", "Lumbar Spine"
 
     print(possible_impairments)
-    pretty_print_data(possible_impairments)
+    pretty_print(possible_impairments)

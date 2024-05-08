@@ -6,8 +6,13 @@ from typing import Dict
 from collections import defaultdict
 from typing import List, Union
 import asyncio
-from common import pretty_print
+from common import vcprint, pretty_print
 from sample_data.data_access import get_sample_data
+from openai_api.chat_completions.markdown_helper import MarkdownProcessorOne
+from automation_matrix.processing.output_processors.markdown_helper import MarkdownProcessorOne
+
+verbose = False
+
 
 # Working Processors:
 # - extract_code_snippets - Tested locally, but not in workflow yet.
@@ -51,13 +56,19 @@ class AiResponseProcessor:
     def order_processors(self, processors):
         processor_names = {processor['processor'] for processor in processors}
 
+        # Check each processor to confirm the "depends_on" value is valid. If it's not, or if it's missing, set it to "content".
         for processor in processors:
             if 'depends_on' not in processor or not processor['depends_on']:
                 processor['depends_on'] = 'content'
+
+            # Setting the dependency to 'content' -  'content' Is the raw data.
             elif processor['depends_on'] not in processor_names and processor['depends_on'] not in ['content', 'raw_api_response']:
-                print(f"\n[Warning!] '{processor['processor']}' has an invalid dependency on '{processor['depends_on']}'. Changing to 'content'.\n")
+                vcprint(verbose=True, data=f"\n[Warning!] '{processor}' has an invalid dependency on '{processor['depends_on']}'. Changing to 'content'.\n", color='red', style='bold')
                 processor['depends_on'] = 'content'
 
+        # ------- Get the processors in teh right order, regardless of what order they were provided in. -------
+        # This is a good example of how I like to code. It's MY job to fix a mistake that the other programmer or the user made, if it doesn't hurt anything.
+        # Order the processors based on their dependencies - Don't want to run something, before the dependencies are met.
         def add_processor_if_dependency_met(processor, ordered, unprocessed):
             if processor['depends_on'] == 'content' or any(dep['processor'] == processor['depends_on'] for dep in ordered):
                 ordered.append(processor)
@@ -72,8 +83,11 @@ class AiResponseProcessor:
             if proc['depends_on'] == 'content':
                 ordered_processors.append(proc)
                 unprocessed_processors.remove(proc)
+        # ------- Up to here is just for ordering the processors based on dependencies. -------
 
         progress = True
+
+        # Now, we have the ordered processors and we will keep going through them until done.
         while unprocessed_processors and progress:
             progress = False
             for proc in list(unprocessed_processors):
@@ -131,11 +145,10 @@ class AiResponseProcessor:
         return code_snippets
 
     async def get_markdown_asterisk_structure(self, content: str) -> Dict[str, Union[str, List[str]]]:
-        from openai_api.chat_completions.markdown_helper import MarkdownProcessorOne
         processor = MarkdownProcessorOne(style='asterisks')
         asterisk_structure_results = await processor.process_markdown(content)
-        #print(f"-------------- DEBUG: Asterisk Structure Results:--------------------------------")
-        #pretty_print(asterisk_structure_results)
+        # print(f"-------------- DEBUG: Asterisk Structure Results:--------------------------------")
+        # pretty_print(asterisk_structure_results)
 
         return asterisk_structure_results
 
@@ -144,7 +157,9 @@ class AiResponseProcessor:
         text_value_list = data.get('plain_text', [])
         data_groups = []
         for i in range(0, len(text_value_list), parts_count):
-            group = {'parts': ['' for _ in range(parts_count)]}
+            group = {
+                'parts': ['' for _ in range(parts_count)]
+            }
 
             for j in range(parts_count):
                 if i + j < len(text_value_list):
@@ -180,8 +195,10 @@ class AiResponseProcessor:
     async def define_key_value_pairs(self, data, keys=[]):
         if not isinstance(data, list):
             return data
+
         def generate_generic_keys(length):
-            return [f'part {i+1}' for i in range(length)]
+            return [f'part {i + 1}' for i in range(length)]
+
         updated_data = []
         for item in data:
             if isinstance(item, dict) and 'parts' in item:
@@ -209,9 +226,18 @@ class AiResponseProcessor:
 
             entry = {
                 "messages": [
-                    {"role": "system", "content": system_content},
-                    {"role": "user", "content": user_content},
-                    {"role": "assistant", "content": assistant_content},
+                    {
+                        "role": "system",
+                        "content": system_content
+                    },
+                    {
+                        "role": "user",
+                        "content": user_content
+                    },
+                    {
+                        "role": "assistant",
+                        "content": assistant_content
+                    },
                 ]
             }
             training_data.append(entry)
@@ -364,7 +390,7 @@ class AiResponseProcessor:
             entries[current_main_key][-1] += buffer
 
         nested_markdown_entries = entries
-        #pretty_print(nested_markdown_entries)
+        # pretty_print(nested_markdown_entries)
         return nested_markdown_entries
 
     async def parse_markdown_content(self, text: str, *args) -> List[str]:
@@ -458,7 +484,10 @@ class AiResponseProcessor:
         """
         # TODO Even through it actually returned empty results, they still printed, which might be a debugging print, but these should return nothing if they're empty
         # By providing resopnses with empty dictionaries, we're creating a lot more work for later, unless that was the intention - Need to review
-        structured_content = {'html': [], 'markdown': []}
+        structured_content = {
+            'html': [],
+            'markdown': []
+        }
         html_pattern = '```html\\n([\\s\\S]*?)\\n```'
         markdown_pattern = '```markdown\\n([\\s\\S]*?)\\n```'
         html_matches = re.findall(html_pattern, text)
@@ -562,29 +591,31 @@ class AiResponseProcessor:
 
 
 async def local_post_processing(sample_content):
-
     return_params = {
         'variable_name': 'SAMPLE_DATA_1001',
         'processors':
             [
-                {'processor': 'get_markdown_asterisk_structure', 'depends_on': 'content', "extraction": [
-                    {
-                        "key_identifier": "nested_structure",
-                        "key_index": 1,
-                        "output_type": "text"
-                    },
-                    {
-                        "key_identifier": "nested_structure",
-                        "key_index": "",
-                        "output_type": "dict"
-                    },
-                    {
-                        "key_identifier": "nested_structure",
-                        "key_index": 3,
-                        "output_type": "dict"
-                    }
-                ]
-                 },
+                {
+                    'processor': 'get_markdown_asterisk_structure',
+                    'depends_on': 'content',
+                    "extraction": [
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": 1,
+                            "output_type": "text"
+                        },
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": "",
+                            "output_type": "dict"
+                        },
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": 3,
+                            "output_type": "dict"
+                        }
+                    ]
+                },
             ],
     }
     processor = AiResponseProcessor(sample_content)
@@ -662,7 +693,9 @@ async def access_data_by_reference(reference, data_structure):
                 if output_format == 'text':
                     result = f"{selected_key}:\n{'\n'.join(content)}"
                 else:
-                    result = {selected_key: content}
+                    result = {
+                        selected_key: content
+                    }
             else:
                 result = "The specified entry was not found."
         else:
@@ -698,9 +731,43 @@ async def handle_OpenAIWrapperResponse(result):
                         print(f"Error processing {variable_name} with {method_name}: {ex}")
 
 
+async def sample_processor_structure(sample_content):
+    return_params = {
+        'variable_name': 'SAMPLE_DATA_1001',
+        'processors':
+            [
+                {
+                    'processor': 'get_markdown_asterisk_structure',
+                    'depends_on': 'content',
+                    "extraction": [
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": 1,
+                            "output_type": "text"
+                        },
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": "",
+                            "output_type": "dict"
+                        },
+                        {
+                            "key_identifier": "nested_structure",
+                            "key_index": 3,
+                            "output_type": "dict"
+                        }
+                    ]
+                },
+            ],
+    }
+
+    processor = AiResponseProcessor(sample_content)
+    processed_content = await processor.process_response(return_params)
+    pretty_print(processed_content)
+
+
 async def main():
     sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_7', sub_app='sample_openai_responses')
-
+    print(f"Sample Data:\n{sample_data}\n")
     result = await local_post_processing(sample_data)
     await handle_OpenAIWrapperResponse(result)
 

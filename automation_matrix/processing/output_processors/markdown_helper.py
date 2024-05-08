@@ -2,14 +2,14 @@ import asyncio
 from markdown_it import MarkdownIt
 from markdown_it.tree import SyntaxTreeNode
 from markdown_it.token import Token
-from mdit_py_plugins.front_matter import front_matter_plugin
-from mdit_py_plugins.footnote import footnote_plugin
 import aiofiles
 import json
-from common.utils.my_utils import pretty_print_data
+from mdit_py_plugins.front_matter import front_matter_plugin
+from mdit_py_plugins.footnote import footnote_plugin
+from common import vcprint
+from sample_data.data_access import get_sample_data
+verbose = False
 
-from markdown_it import MarkdownIt
-from markdown_it.token import Token
 
 class MarkdownProcessorOne:
     def __init__(self, style='asterisks'):
@@ -64,7 +64,10 @@ class MarkdownProcessorOne:
 
     def _build_nested_asterisks_structure(self, tokens: list[Token], current_structure=None, level=0) -> dict:
         if current_structure is None:
-            current_structure = {'content': [], 'sections': {}}
+            current_structure = {
+                'content': [],
+                'sections': {}
+            }
 
         current_heading = None
         i = 0
@@ -76,7 +79,11 @@ class MarkdownProcessorOne:
                 if content_text.startswith("**"):
                     heading_text = content_text.strip("*").strip()
                     current_heading = heading_text
-                    current_structure['sections'][current_heading] = {'content': [], 'bullets': [], 'numbered_lists': []}
+                    current_structure['sections'][current_heading] = {
+                        'content': [],
+                        'bullets': [],
+                        'numbered_lists': []
+                    }
                 else:
                     if current_heading:
                         current_structure['sections'][current_heading]['content'].append(content_text)
@@ -103,7 +110,10 @@ class MarkdownProcessorOne:
 
     def _build_question_asterisks_structure(self, tokens: list[Token], current_structure=None, level=0) -> dict:
         if current_structure is None:
-            current_structure = {'content': [], 'sections': {}}
+            current_structure = {
+                'content': [],
+                'sections': {}
+            }
 
         current_heading = None
         i = 0
@@ -115,7 +125,11 @@ class MarkdownProcessorOne:
                 if content_text.startswith("**"):
                     heading_text = content_text.strip("*").strip()
                     current_heading = heading_text
-                    current_structure['sections'][current_heading] = {'content': [], 'bullets': [], 'numbered_lists': []}
+                    current_structure['sections'][current_heading] = {
+                        'content': [],
+                        'bullets': [],
+                        'numbered_lists': []
+                    }
                 else:
                     if current_heading:
                         current_structure['sections'][current_heading]['content'].append(content_text)
@@ -174,8 +188,8 @@ class MarkdownProcessorOne:
         try:
             section_title = sections[section_number - 1]
             children = data[section_title]
-            #print(f"debug ========================= This is what is called bullets here")
-            #pretty_print_data(children)
+            # print(f"debug ========================= This is what is called bullets here")
+            # pretty_print(children)
             section_text = f"{section_title}\n"
             for child in children:
                 section_text += f"{child}\n"
@@ -188,22 +202,22 @@ class MarkdownProcessorOne:
         try:
             tokens = await loop.run_in_executor(None, self.parse_markdown, text)
             nested_structure = self.build_nested_structure(tokens)
-            #print(f"debug: process_markdown nested_structure: {nested_structure}")
+            # print(f"debug: process_markdown nested_structure: {nested_structure}")
 
-            #pretty_print_data(nested_structure)
+            # pretty_print(nested_structure)
 
             clean_structure = self.clean_up_text_and_organize(nested_structure)
 
-            #print(f"debug: process_markdown clean_structure:")
+            # print(f"debug: process_markdown clean_structure:")
 
-            #pretty_print_data(clean_structure)
+            # pretty_print(clean_structure)
 
             plain_text_sections = []
             for section_number in range(1, len(clean_structure) + 1):
                 section_text = self.get_section_as_text(clean_structure, section_number)
                 plain_text_sections.append(section_text)
-                #print(f"Section {section_number}:\n{section_text}")
-                #print("=====================================")
+                # print(f"Section {section_number}:\n{section_text}")
+                # print("=====================================")
 
             return {
                 "nested_structure": clean_structure,
@@ -211,7 +225,10 @@ class MarkdownProcessorOne:
             }
         except Exception as e:
             print(f"ERROR during markdown parsing: {str(e)}")
-            return {"error": True, "message": f"Markdown parsing error: {str(e)}"}
+            return {
+                "error": True,
+                "message": f"Markdown parsing error: {str(e)}"
+            }
 
 
 async def get_markdown_asterisk_structure(markdown_text):
@@ -244,11 +261,11 @@ class MarkdownProcessor:
         root_node = SyntaxTreeNode(tokens)  # Ensure SyntaxTreeNode is defined or imported
         return self.build_simple_structure(root_node.children)
 
-
-
     def build_simple_structure(self, nodes, content_dict=None, current_key='root'):
         if content_dict is None:
-            content_dict = {current_key: []}
+            content_dict = {
+                current_key: []
+            }
 
         for node in nodes:
             if node.type.startswith('heading'):
@@ -265,7 +282,7 @@ class MarkdownProcessor:
                         if list_item_text:
                             content_dict[current_key].append(list_item_text)
 
-        #pretty_print_data(content_dict)
+        # pretty_print(content_dict)
         return content_dict
 
     def parse_markdown_nested(self, text):
@@ -279,7 +296,9 @@ class MarkdownProcessor:
 
     def build_nested_structure(self, nodes, content_dict=None, current_key='root'):
         if content_dict is None:
-            content_dict = {current_key: {}}
+            content_dict = {
+                current_key: {}
+            }
 
         for node in nodes:
             if node.type.startswith('heading'):
@@ -299,10 +318,9 @@ class MarkdownProcessor:
                         if list_item_text:
                             content_dict[current_key]['sections'].append(list_item_text)
 
-        # Assuming pretty_print_data is a method you use for debugging or displaying the structure
-        #pretty_print_data(content_dict)
+        # Assuming pretty_print is a method you use for debugging or displaying the structure
+        # pretty_print(content_dict)
         return content_dict
-
 
     async def process_markdown(self, text):
         loop = asyncio.get_running_loop()
@@ -310,12 +328,20 @@ class MarkdownProcessor:
             result_dict = await loop.run_in_executor(None, self.parse_markdown, text)
             if not result_dict:
                 print("ERROR: parse_markdown returned an empty dictionary.")
-                return {"error": True, "message": "Markdown parsing resulted in an empty dictionary."}
-            return {'processed_value': result_dict}
+                return {
+                    "error": True,
+                    "message": "Markdown parsing resulted in an empty dictionary."
+                }
+            return {
+                'processed_value': result_dict
+            }
 
         except Exception as e:
             print(f"ERROR during markdown parsing: {str(e)}")
-            return {"error": True, "message": f"Markdown parsing error: {str(e)}"}
+            return {
+                "error": True,
+                "message": f"Markdown parsing error: {str(e)}"
+            }
 
     async def process_markdown_nested(self, text):
         loop = asyncio.get_running_loop()
@@ -323,12 +349,20 @@ class MarkdownProcessor:
             result_dict = await loop.run_in_executor(None, self.parse_markdown_nested, text)
             if not result_dict:
                 print("ERROR: parse_markdown returned an empty dictionary.")
-                return {"error": True, "message": "Markdown parsing resulted in an empty dictionary."}
-            return {'processed_value': result_dict}
+                return {
+                    "error": True,
+                    "message": "Markdown parsing resulted in an empty dictionary."
+                }
+            return {
+                'processed_value': result_dict
+            }
 
         except Exception as e:
             print(f"ERROR during markdown parsing: {str(e)}")
-            return {"error": True, "message": f"Markdown parsing error: {str(e)}"}
+            return {
+                "error": True,
+                "message": f"Markdown parsing error: {str(e)}"
+            }
 
 
 async def save_object_as_text(filepath, obj):
@@ -343,8 +377,8 @@ async def load_text_as_object(filepath):
         content = await file.read()
     return json.loads(content)
 
-async def get_structure_from_file(filepath):
 
+async def get_structure_from_file(filepath):
     async with aiofiles.open(filepath, 'r', encoding='utf-8') as file:
         content = await file.read()
 
@@ -368,9 +402,12 @@ def access_by_reference_with_key(reference, data_structure):
         keys = list(nested_dict.keys())
         if 0 <= index < len(keys):
             selected_key = keys[index]
-            return {selected_key: nested_dict[selected_key]}  # Return the full key and its content
+            return {
+                selected_key: nested_dict[selected_key]
+            }  # Return the full key and its content
 
     return None  # Return None if the specified key/index is not found
+
 
 def access_by_reference_as_text(reference, data_structure):
     """
@@ -394,6 +431,7 @@ def access_by_reference_as_text(reference, data_structure):
             return f"{selected_key}:\n{content_str}"  # Formatting the key and content as plain text
 
     return "The specified entry was not found."  # Return this message if the specified key/index is not found
+
 
 def access_data_by_reference(extraction_map, data_structure):
     """
@@ -439,7 +477,9 @@ def access_data_by_reference(extraction_map, data_structure):
                 if output_format == 'text':
                     result = f"{selected_key}:\n{'\n'.join(content)}"
                 else:
-                    result = {selected_key: content}
+                    result = {
+                        selected_key: content
+                    }
             else:
                 print("Error! Index out of range.")
                 result = ""
@@ -475,7 +515,6 @@ def handle_OpenAIWrapperResponse(result):
                     except Exception as ex:
                         # Log the error and continue with the next extraction_map
                         print(f"Error processing {variable_name} with {method_name}: {ex}")
-
 
 
 response_data = {
@@ -580,44 +619,41 @@ response_data = {
 }
 
 
-async def main(filepath):
+async def main(data):
     style = 'asterisks'
-    #processor = MarkdownProcessorOne(style)
-    #content = await get_structure_from_file(filepath)
-    #results = await processor.process_markdown(content)
-    #nested_results = await processor.process_markdown(content)
-    #root = results.get('processed_value')
+    # processor = MarkdownProcessorOne(style)
+    # content = await get_structure_from_file(filepath)
+    # results = await processor.process_markdown(content)
+    # nested_results = await processor.process_markdown(content)
+    # root = results.get('processed_value')
 
-    #response_data = response_data
+    # response_data = response_data
 
     # Sample entry to get the 3rd key as text
-    #reference_text_3rd = {"key_identifier": "nested_structure", "key_index": 1, "output_type": "text"}
+    # reference_text_3rd = {"key_identifier": "nested_structure", "key_index": 1, "output_type": "text"}
     # Sample entry to get the 2nd key as a dict
-    #reference_dict_2nd = {"key_identifier": "nested_structure", "key_index": 1, "output_type": "dict"}
+    # reference_dict_2nd = {"key_identifier": "nested_structure", "key_index": 1, "output_type": "dict"}
     # Sample entry to get the entire nested structure as text
-    #reference_entire_text = {"key_identifier": "nested_structure", "key_index": None, "output_type": "text"}
+    # reference_entire_text = {"key_identifier": "nested_structure", "key_index": None, "output_type": "text"}
 
     # Results
-    #pretty_print_data(access_data_by_reference(reference_text_3rd, nested_results))
-    #pretty_print_data(access_data_by_reference(reference_dict_2nd, nested_results))
-    #pretty_print_data(access_data_by_reference(reference_entire_text, nested_results))
+    # pretty_print(access_data_by_reference(reference_text_3rd, nested_results))
+    # pretty_print(access_data_by_reference(reference_dict_2nd, nested_results))
+    # pretty_print(access_data_by_reference(reference_entire_text, nested_results))
 
-    extraction_results = handle_OpenAIWrapperResponse(response_data)
-    #pretty_print_data(extraction_results)
+    extraction_results = handle_OpenAIWrapperResponse(data)
+    # pretty_print(extraction_results)
 
-    #pretty_print_data(result)
-
+    # pretty_print(result)
 
 
 if __name__ == "__main__":
-    filepath = r'D:\OneDrive\dev\PycharmProjects\aidream\a_sample\matrix_steps\response_handling\sample_text.txt'
-    #asyncio.run(main_async(filepath=filepath))
 
-    #asyncio.run(get_structure_from_file(filepath=filepath, count=2))
+    sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_text', sub_app=None)
+    # asyncio.run(main_async(filepath=filepath))
 
-    #asyncio.run(main_async())
+    # asyncio.run(get_structure_from_file(filepath=filepath, count=2))
 
-    asyncio.run(main(filepath))
+    # asyncio.run(main_async())
 
-
-
+    asyncio.run(main(sample_data))

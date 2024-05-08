@@ -13,6 +13,9 @@ openai = "^1.26.0"
 bs4 = "^0.0.2"
 scrapy = "^2.11.1"
 selenium = "^4.20.0"
+markdown-it-py = "^3.0.0"
+aiofiles = "^23.2.1"
+mdit-py-plugins = "^0.4.0"
 
 
 [build-system]
