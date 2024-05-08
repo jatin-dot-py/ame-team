@@ -14,7 +14,7 @@ from sample_data.data_access import get_sample_data
 # - get_markdown_asterisk_structure - Tested separately, but not here and not in workflow yet.
 
 
-class OpenaiResponseProcessor:
+class AiResponseProcessor:
     def __init__(self, content):
         self.content = content
         self.return_params = {}
@@ -587,7 +587,7 @@ async def local_post_processing(sample_content):
                  },
             ],
     }
-    processor = OpenaiResponseProcessor(sample_content)
+    processor = AiResponseProcessor(sample_content)
     processed_content = await processor.process_response(return_params)
     pretty_print(processed_content)
     print("========================================== Initial Content ==========================================")
