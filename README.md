@@ -57,4 +57,17 @@ This is a core concept that MUST be adhered to by everyone!
 - If you have things that are broken or untested, push them to a new branch, until you get them fixed. You still must push everything daily.
 - Each day, if your code does not cause conflicts, it's important that we push it to the main, even if you are not done yet, as long as there are no major bugs in your code that hurt the overall project.
 
-Thank you for following these guidelines, which are designed to help all of us. 
+
+## Sample Usage:
+Include a sample usage section at the bottom of each script to demonstrate how it can be run. This should show the main entry point and usage examples. You may include multiple examples and comment out those that are less crucial, but ensure that the primary example is ready to execute with appropriate sample arguments.
+
+```python
+if __name__ == "__main__":
+    # Example usage
+    sample_data = get_sample_data(app_name="automation_matrix", data_name="markdown_content", sub_app="ama_ai_output_samples")
+    print(sample_data)
+```
+
+This snippet demonstrates how to execute a typical script within this project by fetching and displaying some sample data. This approach helps new contributors understand how to interact with the scripts and test them independently.
+
+Thank you for following these guidelines, which are designed to help all of us.

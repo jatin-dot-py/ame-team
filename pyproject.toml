@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "ame-team"
+version = "0.1.0"
+description = ""
+authors = ["armanisadeghi <132974515+armanisadeghi@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-dotenv = "^1.0.1"
+python-decouple = "^3.8"
+openai = "^1.26.0"
+bs4 = "^0.0.2"
+scrapy = "^2.11.1"
+selenium = "^4.20.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
