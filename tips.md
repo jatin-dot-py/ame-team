@@ -21,3 +21,19 @@
 
 ## Error handling
 - Not added to this project yet
+
+## Temp Directory
+- I was having difficulty getting git to include the directories, but create this structure for now:
+- /temp/
+- /temp/app_outputs/
+- /temp/app_outputs/common/
+- /temp/app_outputs/knowledge/
+- /temp/app_outputs/your-app-name/
+
+## Temp files by type:
+- /temp/video/
+- /temp/image/
+- /temp/audio/
+- /temp/text/
+- /temp/json/
+- /temp/other/
