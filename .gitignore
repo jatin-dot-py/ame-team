@@ -128,6 +128,22 @@ ENV/
 env.bak/
 venv.bak/
 
+# basics
+armani/
+_armani/
+sec/
+_dev/
+junk/
+_junk/
+
+# AME Temp Files and directory structure
+# Ignore all files in the temp directory and its subdirectories
+/temp/**/*
+
+# Allow .gitkeep files to retain directory structure
+!/temp/**/.gitkeep
+
+
 # Spyder project settings
 .spyderproject
 .spyproject
