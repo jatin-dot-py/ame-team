@@ -1,22 +1,26 @@
 import asyncio
 from markdown_it import MarkdownIt
-from markdown_it.tree import SyntaxTreeNode
 from markdown_it.token import Token
 import aiofiles
 import json
+from common import vcprint, pretty_print, get_sample_data
+from automation_matrix import Processor
 from mdit_py_plugins.front_matter import front_matter_plugin
 from mdit_py_plugins.footnote import footnote_plugin
-from common import vcprint, pretty_print
-from common import get_sample_data
-from common.sample_data.automation_matrix.sample_openai_responses import get_sample_fine_tuning_response
+
+from markdown_it.tree import SyntaxTreeNode  # Currently not using this but should
+
 
 verbose = False
 
 
-class MarkdownProcessorOne:
+class Markdown(Processor):
     def __init__(self, style='asterisks'):
         self.md = MarkdownIt("commonmark")
         self.style = style  # Style of markdown ('asterisks' or 'hashes')
+        #self.md.use(front_matter_plugin) # Currently not using front matter but should
+        #self.md.use(footnote_plugin)  # Currently not using footnotes but should
+        super().__init__()
 
     def parse_markdown(self, text: str):
         return self.md.parse(text)
@@ -54,10 +58,11 @@ class MarkdownProcessorOne:
             i += 1
         return items
 
+    #  This is where we can define unique markdown structures and styles and get them with specific methods
     def build_nested_structure(self, tokens, current_structure=None, level=0):
-        if self.style == 'asterisks':
+        if self.style == 'asterisks':  # This is the one I've been using a lot, but we need many more.
             return self._build_nested_asterisks_structure(tokens, current_structure, level)
-        elif self.style == 'question_asterisks':  # I made this and the associated function but thanks to ChatGPT 3, we might not need it! He fixed the regular one above.
+        elif self.style == 'question_asterisks':  # Made this first, but the one above is doing this mostly now!
             return self._build_question_asterisks_structure(tokens, current_structure, level)
         elif self.style == 'hashes':
             return self._build_nested_hashes_structure(tokens, current_structure, level)
@@ -185,13 +190,12 @@ class MarkdownProcessorOne:
 
         return processed_data
 
+    # METHOD 1: All the work we do is for these two steps: This one gets it as plain, but organized clean text
     def get_section_as_text(self, data, section_number):
         sections = list(data.keys())
         try:
             section_title = sections[section_number - 1]
             children = data[section_title]
-            # print(f"debug ========================= This is what is called bullets here")
-            # pretty_print(children)
             section_text = f"{section_title}\n"
             for child in children:
                 section_text += f"{child}\n"
@@ -199,27 +203,19 @@ class MarkdownProcessorOne:
         except IndexError:
             return f"Section number {section_number} is out of range. Please enter a valid section number."
 
+    # METHOD 2: This one gets it as a nested structure so it's very easy to target whatever we want!
     async def process_markdown(self, text: str):
         loop = asyncio.get_running_loop()
         try:
             tokens = await loop.run_in_executor(None, self.parse_markdown, text)
             nested_structure = self.build_nested_structure(tokens)
-            # print(f"debug: process_markdown nested_structure: {nested_structure}")
-
-            # pretty_print(nested_structure)
 
             clean_structure = self.clean_up_text_and_organize(nested_structure)
-
-            # print(f"debug: process_markdown clean_structure:")
-
-            # pretty_print(clean_structure)
 
             plain_text_sections = []
             for section_number in range(1, len(clean_structure) + 1):
                 section_text = self.get_section_as_text(clean_structure, section_number)
                 plain_text_sections.append(section_text)
-                # print(f"Section {section_number}:\n{section_text}")
-                # print("=====================================")
 
             return {
                 "nested_structure": clean_structure,
@@ -234,7 +230,7 @@ class MarkdownProcessorOne:
 
 
 async def get_markdown_asterisk_structure(markdown_text):
-    processor = MarkdownProcessorOne(style='asterisks')
+    processor = Markdown(style='asterisks')
     asterisk_structure_results = await processor.process_markdown(markdown_text)
 
     return asterisk_structure_results
@@ -500,12 +496,12 @@ response_data = {
                     "broker": "BLOG_IDEA_3"
                 },
                 #  I have commented out Blog Idea 4 for demonstration purposes as though the request was to get blogs 1, 2, 3, and 5, but NOT 4
-                #{
+                # {
                 #    "key_identifier": "nested_structure",
                 #    "key_index": 4,
                 #    "output_type": "text",
                 #    "broker": "BLOG_IDEA_4"
-                #},
+                # },
                 {
                     "key_identifier": "nested_structure",
                     "key_index": 5,
@@ -520,7 +516,7 @@ response_data = {
 
 async def main(data):
     style = 'asterisks'
-    # processor = MarkdownProcessorOne(style)
+    # processor = Markdown(style)
     # content = await get_structure_from_file(filepath)
     # results = await processor.process_markdown(content)
     # nested_results = await processor.process_markdown(content)

@@ -1,6 +1,5 @@
 import re
 import asyncio
-
 from common import pretty_print
 
 # This is a different implementation that uses re, instead of markdown-it. Not sure which is better. For now, they kind of get similar results.

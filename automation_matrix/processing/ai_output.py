@@ -1,4 +1,3 @@
-import json
 import re
 import ast
 from bs4 import BeautifulSoup
@@ -7,8 +6,8 @@ from collections import defaultdict
 from typing import List, Union
 import asyncio
 from common import vcprint, pretty_print, get_sample_data
-from automation_matrix.processing.output_processors.markdown_helper import MarkdownProcessorOne
-from automation_matrix.processing.output_processors.processor import ProcessingManager
+from automation_matrix.processing.markdown import Markdown
+from automation_matrix.processing.processor import ProcessingManager
 
 verbose = False
 
@@ -146,7 +145,7 @@ class AiOutput(ProcessingManager):
         return code_snippets
 
     async def get_markdown_asterisk_structure(self, content: str) -> Dict[str, Union[str, List[str]]]:
-        processor = MarkdownProcessorOne(style='asterisks')
+        processor = Markdown(style='asterisks')
         asterisk_structure_results = await processor.process_markdown(content)
         # print(f"-------------- DEBUG: Asterisk Structure Results:--------------------------------")
         # pretty_print(asterisk_structure_results)
