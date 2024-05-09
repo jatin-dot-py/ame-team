@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import List, Union
 import asyncio
 from common import vcprint, pretty_print, get_sample_data
-from automation_matrix.processing.markdown import Markdown
+from automation_matrix.processing.markdown.organizer import Markdown
 from automation_matrix.processing.processor import ProcessingManager
 
 verbose = False
@@ -770,16 +770,8 @@ async def main():
     sample_data = get_sample_data(app_name='automation_matrix', data_name='sample_6', sub_app='sample_openai_responses')
     print(f"Sample Data:\n{sample_data}\n")
     result = await local_post_processing(sample_data)
-    #await handle_OpenAIWrapperResponse(result)
+    # await handle_OpenAIWrapperResponse(result)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-
-
