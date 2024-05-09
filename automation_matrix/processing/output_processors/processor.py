@@ -1,18 +1,34 @@
-class ProcessorHandler:
+
+
+def publish_broker(broker_name, value):
+    # This function calls the broker and publishes the value
+    # This value is passed instantly to the waiting agent or function in the workflow process
+    pass
+
+
+class ProcessingHandler:
     def __init__(self):
         self.source_data = None
         self.value = None
-        self.return_params = {}
         self.signature = None
         self.broker_name = None
-        self.processing_manager = ProcessingManager()
+        self.processing_manager = ProcessingManager()  # Loads the processing manager
 
     def signature_process(self, source_data):
+        try:
+            self.source_data = source_data
+            self.value = self.source_data['value']
+            self.signature = self.source_data['signature']
+            self.broker_name = self.source_data(self.source_data['broker'])
+            self.publish_broker(self.broker_name, self.value)
+            self.extract_data()
+
+        except Exception as e:
+            self.load_data(source_data)
+
+    def load_data(self, source_data):
         self.source_data = source_data
-        self.value = self.source_data['value']
-        self.return_params = self.source_data['return_params']
-        self.signature = self.source_data['signature']
-        self.broker_name = self.source_data(self.source_data['broker'])
+        self.signature = self.source_data['signature'] if 'signature' in self.source_data else 'default'
         self.extract_data()
 
     def set_broker_name(self, broker_name):
@@ -20,11 +36,6 @@ class ProcessorHandler:
 
     def set_config(self, return_params):
         self.return_params = return_params
-
-    def load_data(self, source_data):
-        self.source_data = source_data
-        self.signature = self.source_data['signature'] if 'signature' in self.source_data else 'default'
-        self.extract_data()
 
     def extract_data(self):
         method_name = f"process_data_{self.signature}"
@@ -34,11 +45,9 @@ class ProcessorHandler:
     def process_data_default(self):
         self.value = self.source_data
 
-    def process_data_AiResponse(self):
+    def process_data_ai_response(self):
         if not self.value:
             self.value = self.source_data['value']
-        if not self.return_params:
-            self.return_params = self.source_data['return_params']
         if not self.broker_name:
             self.broker_name = self.source_data['variable_name']
         if self.return_params:
@@ -47,7 +56,16 @@ class ProcessorHandler:
 
 class ProcessingManager:
     def __init__(self):
-        self.processors = []
+        self.source_data = None
+        self.value = None
+        self.return_params = {}
+        self.processors = []  # Stores all the processors, in order
+        self.brokers = {}  # Stores all the brokers
+
+
+
+
+
 
     def add_processor(self, name, depends_on, args):
         processor = Processor()
