@@ -70,7 +70,7 @@ class ProcessingManager:  # Parent class for any specific processing managers
         self.processors.append(processor)
 
 
-class Processor:  # Parent class for each individual processor
+class Processor:  # Parent class for each individual processor - These setup organized data for the extractors
     def __init__(self):
         self.name = None
         self.depends_on = None
