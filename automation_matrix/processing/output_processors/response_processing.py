@@ -8,6 +8,7 @@ from typing import List, Union
 import asyncio
 from common import vcprint, pretty_print, get_sample_data
 from automation_matrix.processing.output_processors.markdown_helper import MarkdownProcessorOne
+from automation_matrix.processing.output_processors.processor import ProcessingManager
 
 verbose = False
 
@@ -17,13 +18,15 @@ verbose = False
 # - get_markdown_asterisk_structure - Tested separately, but not here and not in workflow yet.
 
 
-class AiResponseProcessor:
+class AiOutput(ProcessingManager):
+
     def __init__(self, content):
         self.content = content
         self.return_params = {}
         self.processed_content = {}
         self.variable_name = None
         self.source_info = {}
+        super().__init__()
 
     async def process_response(self, return_params):
         if not isinstance(return_params, dict):
@@ -616,7 +619,7 @@ async def local_post_processing(sample_content):
                 },
             ],
     }
-    processor = AiResponseProcessor(sample_content)
+    processor = AiOutput(sample_content)
     processed_content = await processor.process_response(return_params)
     pretty_print(processed_content)
     print("========================================== Initial Content ==========================================")
@@ -759,7 +762,7 @@ async def sample_processor_structure(sample_content):
             ],
     }
 
-    processor = AiResponseProcessor(sample_content)
+    processor = AiOutput(sample_content)
     processed_content = await processor.process_response(return_params)
     pretty_print(processed_content)
 

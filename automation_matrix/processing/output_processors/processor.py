@@ -54,18 +54,13 @@ class ProcessingHandler:
             self.processing_manager.add_processor('AiResponse', None, self.return_params)
 
 
-class ProcessingManager:
+class ProcessingManager:  # Parent class for any specific processing managers
     def __init__(self):
         self.source_data = None
         self.value = None
         self.return_params = {}
         self.processors = []  # Stores all the processors, in order
         self.brokers = {}  # Stores all the brokers
-
-
-
-
-
 
     def add_processor(self, name, depends_on, args):
         processor = Processor()
@@ -75,7 +70,7 @@ class ProcessingManager:
         self.processors.append(processor)
 
 
-class Processor:
+class Processor:  # Parent class for each individual processor
     def __init__(self):
         self.name = None
         self.depends_on = None
@@ -88,7 +83,7 @@ class Processor:
         self.extractors.append(extractor)
 
 
-class Extractor:
+class Extractor: # Parent class for each individual extractor
     def __init__(self):
         self.key = None
         self.index = None
@@ -102,7 +97,7 @@ class Extractor:
         self.broker_name = broker_name
 
 
-class ExtractData(ProcessorHandler):
+class ExtractData(ProcessingHandler):
     def __init__(self):
         self.extraction_methods = []
         self.key_extractor = {}

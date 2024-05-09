@@ -3,12 +3,14 @@ import subprocess
 import os
 import tempfile
 import time
-from common import pretty_print
-from sample_data import get_sample_data
-from ame.settings.base import BASE_DIR, TEMP_DIR
+from common import pretty_print, get_sample_data
+from ame_team.settings.base import BASE_DIR, TEMP_DIR
+from automation_matrix import Processor
 
-class ProcessAiOutputs:
+
+class OutputClassifier(Processor):
     def __init__(self):
+        super().__init__()
         self.separated_sections = []
         self.classified_sections = []
         self.table_tuples = []
@@ -192,7 +194,7 @@ def convert_markdown_content_to_docx(markdown_content, output_docx_file_path):
 
 
 async def classify_markdown_content(text_data):
-    classifiers = ProcessAiOutputs()
+    classifiers = OutputClassifier()
     classified_sections = classifiers.classify_output_details(text_data)
     pretty_print(classified_sections)
 
@@ -223,7 +225,7 @@ async def classify_markdown_content(text_data):
 
 
 async def main(text_data):
-    classifiers = ProcessAiOutputs()
+    classifiers = OutputClassifier()
     classified_sections = classifiers.classify_output_details(text_data)
     pretty_print(classified_sections)
 
@@ -241,13 +243,12 @@ async def main(text_data):
 if __name__ == "__main__":
     import asyncio
 
-    sample_data = get_sample_data(app_name="automation_matrix", data_name="markdown_content", sub_app="ama_ai_output_samples")
-
+    sample_data = get_sample_data(app_name="automation_matrix", data_name="markdown_content",
+                                  sub_app="ama_ai_output_samples")
 
     asyncio.run(main(sample_data))
 
     # VERY GOOD FOR MARKDOWN TO DOCX CONVERSION
     output_docx_file_path = os.path.join(BASE_DIR, "temp", "app_outputs", "output.docx")
-
 
     convert_markdown_content_to_docx(sample_data, output_docx_file_path=output_docx_file_path)
