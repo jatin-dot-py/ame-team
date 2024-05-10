@@ -43,7 +43,7 @@ class Conductor:
             self.recipe_ais[recipe_id] = recipe_manager
             await recipe_manager.subscribe_all_variables()
 
-    class RecipeAi(RecipeProcessor):
+    class RecipeAi():
         def __init__(self, conductor, recipe_id, model_override=None, variable_objects=None):
             print(
                 f'[DEBUG] RecipeAi __init__ called with recipe_id={recipe_id}, model_override={model_override}, variable_objects={variable_objects}')
@@ -123,7 +123,7 @@ class Conductor:
             response = await self.conductor.handle_recipe_call(api_call_package)
             return response
 
-    class RecipeCallAI(AsyncAiCaller):
+    class RecipeCallAI():
         def __init__(self, Conductor, task_manager, value_broker, call_package):
             super().__init__()
             self.conductor = Conductor

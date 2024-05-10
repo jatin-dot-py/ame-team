@@ -196,23 +196,20 @@ def convert_markdown_content_to_docx(markdown_content, output_docx_file_path):
 async def classify_markdown_content(text_data):
     classifiers = OutputClassifier()
     classified_sections = classifiers.classify_output_details(text_data)
-    pretty_print(classified_sections)
+    # pretty_print(classified_sections)
 
     classified_sections_dict = {}
     classified_sections_text = {}
 
     print("\nCategorized sections:")
     for count, (section_type, section) in enumerate(classified_sections, start=1):
-        print(f"{count}. {section_type}")
         # Populate dictionary with type as key and section as value
         classified_sections_dict[section_type] = section
 
     print("\n========================== Content =========================:")
     for section_type, section in classified_sections:
         section_text = []
-        print(f"\n----- {section_type} -----")
         for category, line in section:
-            print(f"{line}")
             section_text.append(line)
         classified_sections_text[section_type] = "\n".join(section_text)
 
@@ -223,6 +220,13 @@ async def classify_markdown_content(text_data):
 
     return classified_content
 
+
+async def get_classify_markdown_section_list(text_data):
+    classifiers = OutputClassifier()
+    classified_sections = classifiers.classify_output_details(text_data)
+    # pretty_print(classified_sections)
+
+    return classified_sections
 
 async def main(text_data):
     classifiers = OutputClassifier()
